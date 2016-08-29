@@ -1,4 +1,6 @@
 var command = require('child_process').spawn('bash');
+const storage = require('electron-json-storage');
+var Cryptr = require('cryptr');
 
 command.stdout.on('data', function (data) {
     console.log('stdout: ' + data);
@@ -9,37 +11,47 @@ command.on('exit', function (code) {
 });
 
 function createNewWallet(walletName, password){
-  child = spawn ('./simplewallet', ['--generate-new-wallet', walletName, '--password', password]);
-  child.stdin.write("0\n");
-  child.stdin.write("help\n");
-  child.stdout.on('data', (data) => {
-    var text = `${data}`;
-    console.log(text);
-    //console.log(`stdout: ${data}`);
-  });
+  command.stdin.write('./simplewallet --generate-new-wallet ' + walletName + ' --password ' + password + '\n');
+  command.stdin.write('0\n');
+  sessionStorage.setItem('walletName', walletName);
+  sessionStorage.setItem('walletPassword', password);
 }
 
-function commandTest(){
-    console.log('Sending stdin to terminal');
-    command.stdin.write('echo "Hello $USER. Your machine runs since:"\n');
-    command.stdin.write('uptime\n');
-    console.log('Ending terminal session');
-    //command.stdin.end();
+function parseConsoleOutput(data){
+  if (data.indexOf('Generated new wallet:') != -1){
+    var walletKey = data.substring(data.indexOf('Generated new wallet:') + 22, data.indexOf('View key:')-1);
+    sessionStorage.setItem("walletAddress", walletKey);
+  }
+  if (data.indexOf('PLEASE NOTE: the following 25 words')){
 
+  }
 }
 
-function parseWalletAddress(){
+function saveNewWallet(walletName, password, address, viewkey){
+  var wallets = [];
+  var walletObject = new Object();
+  cryptr = new Cryptr(password);
+  walletObject.name = walletName;
+  walletObject.password = cryptr.encrypt(password);
+  walletObject.address = address;
+  walletObject.viewKey = viewKey;
 
-}
-
-function parseWalletWords(){
-
+  storage.get('wallets', function(error, data)){
+    if (data != null){
+      wallets = data;
+    }
+    wallets.push(walletObject);
+    storage.set('wallets', wallets, function (error){
+      if (error) throw error;
+    });
+  }
 }
 
 $(document).ready(function(){
   $("#createNewWallet").click(function(){
-    var walletName = $("#walletName").val();
-    var password = $("#password").val();
+    console.log('here');
+    var walletName = $("#newWalletName").val();
+    var password = $("#newWalletPassword").val();
     createNewWallet(walletName, password);
   });
 });
