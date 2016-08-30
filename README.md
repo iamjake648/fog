@@ -1,6 +1,6 @@
-# Mist | Monero Wallet
+# Fog | Monero Wallet
 
-Mist is an upcoming, open source GUI front-end for the Monero simple wallet. It uses electron and should work across OSX/Linux/Windows. It's being developed on a mac with that binary, so if you would like to use it on another platform, you'll need to add that platform's binary. 
+Fog is an upcoming, open source GUI front-end for the Monero simple wallet. It uses electron and should work across OSX/Linux/Windows. It's being developed on a mac with that binary, so if you would like to use it on another platform, you'll need to add that platform's binary. 
 
 To build this you'll need node installed. 
 
