@@ -3,7 +3,7 @@ const storage = require('electron-json-storage');
 var Cryptr = require('cryptr');
 
 command.stdout.on('data', function (data) {
-    console.log('stdout: ' + data);
+    parseConsoleOutput(data);
 });
 
 command.on('exit', function (code) {
@@ -18,13 +18,37 @@ function createNewWallet(walletName, password){
 }
 
 function parseConsoleOutput(data){
-  if (data.indexOf('Generated new wallet:') != -1){
-    var walletKey = data.substring(data.indexOf('Generated new wallet:') + 22, data.indexOf('View key:')-1);
+  console.log("\n-----------------------------------------------------\n" + data);
+  var dataAsString = data.toString();
+  if (dataAsString.indexOf('Generated new wallet:') != -1){
+    var walletKey = dataAsString.substring(dataAsString.indexOf('Generated new wallet:') + 22, dataAsString.indexOf('View key:')-1);
     sessionStorage.setItem("walletAddress", walletKey);
   }
-  if (data.indexOf('PLEASE NOTE: the following 25 words')){
-
+  if (dataAsString.indexOf('PLEASE NOTE: the following 25 words') != -1){
+    var limitedString = dataAsString.substring(dataAsString.indexOf('PLEASE NOTE: the following 25 words'), dataAsString.length);
+    var paragraphs = dataAsString.split("\n");
+    var wordsStartIndex = 0;
+    for (i = 0; i < paragraphs.length; i++){
+      if (paragraphs[i].indexOf('PLEASE NOTE: the following 25 words') != -1){
+        wordsStartIndex = i + 2;
+      }
+    }
+    var walletWords = paragraphs[wordsStartIndex] + paragraphs[wordsStartIndex + 1] + paragraphs[wordsStartIndex + 2];
+    showWarningMessage('Write down your wallet words, they will not appear agagin!', walletWords, 'I have written them down.');
   }
+}
+
+function showWarningMessage(title,text,confirmText){
+  swal({
+    title: title,
+    text: text,
+    type: "warning",
+    confirmButtonText: confirmText,
+    confirmButtonColor: "#DD6B55",
+    closeOnConfirm: true },
+    function(){
+      //Go to homepage
+    });
 }
 
 function saveNewWallet(walletName, password, address, viewkey){
@@ -36,7 +60,7 @@ function saveNewWallet(walletName, password, address, viewkey){
   walletObject.address = address;
   walletObject.viewKey = viewKey;
 
-  storage.get('wallets', function(error, data)){
+  storage.get('wallets', function(error, data){
     if (data != null){
       wallets = data;
     }
@@ -44,7 +68,7 @@ function saveNewWallet(walletName, password, address, viewkey){
     storage.set('wallets', wallets, function (error){
       if (error) throw error;
     });
-  }
+  });
 }
 
 $(document).ready(function(){
